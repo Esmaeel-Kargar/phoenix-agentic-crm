@@ -1,0 +1,30 @@
+# WordPress
+wp-content/uploads/
+wp-content/cache/
+wp-config.php
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+*.swp
+*~
+
+# IDE
+.idea/
+.vscode/
+*.sublime-*
+
+# Project files
+node_modules/
+vendor/
+composer.lock
+package-lock.json
+
+# Environment
+.env
+.env.local
+
+# Build artifacts
+*.zip
+*.tar.gz

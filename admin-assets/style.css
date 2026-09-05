@@ -1,0 +1,129 @@
+/* -------------------------------------------------------------------------
+ * Phoenix CRM — Admin UI Styles
+ * ------------------------------------------------------------------------- */
+
+/* ---- Status badges ---- */
+.phoenix-status-pending {
+    color: #fff;
+    background: #f39c12;
+    border-radius: 3px;
+    padding: 3px 8px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    display: inline-block;
+}
+.phoenix-status-approved {
+    color: #fff;
+    background: #27ae60;
+    border-radius: 3px;
+    padding: 3px 8px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    display: inline-block;
+}
+.phoenix-status-rejected {
+    color: #fff;
+    background: #e74c3c;
+    border-radius: 3px;
+    padding: 3px 8px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    display: inline-block;
+}
+
+/* ---- Card component ---- */
+.phoenix-card {
+    background: #fff;
+    border: 1px solid #dcdcde;
+    border-radius: 6px;
+    padding: 16px 20px;
+    margin-bottom: 16px;
+    box-shadow: 0 1px 2px rgba(0,0,0,.04);
+}
+.phoenix-card h3 {
+    margin: 0 0 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #1d2327;
+}
+.phoenix-card .phoenix-card-meta {
+    color: #787c82;
+    font-size: 12px;
+    margin-bottom: 10px;
+}
+.phoenix-card .phoenix-card-actions {
+    margin-top: 10px;
+}
+
+/* ---- Badge (generic) ---- */
+.phoenix-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 600;
+    background: #f0f0f1;
+    color: #3c434a;
+}
+
+/* ---- Loading spinner ---- */
+.phoenix-spinner {
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    border: 2px solid #c3c4c7;
+    border-top-color: #2271b1;
+    border-radius: 50%;
+    animation: phoenix-spin .6s linear infinite;
+    vertical-align: middle;
+    margin: 0 6px;
+}
+@keyframes phoenix-spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ---- Toast notifications ---- */
+.phoenix-toast {
+    position: fixed;
+    top: 32px;
+    right: 20px;
+    z-index: 99999;
+    padding: 12px 20px;
+    border-radius: 4px;
+    font-size: 13px;
+    font-weight: 500;
+    box-shadow: 0 2px 8px rgba(0,0,0,.15);
+    display: none;
+    max-width: 360px;
+}
+.phoenix-toast.phoenix-toast-success {
+    background: #edfaef;
+    border-left: 4px solid #27ae60;
+    color: #1e3a2e;
+}
+.phoenix-toast.phoenix-toast-error {
+    background: #fcf0f1;
+    border-left: 4px solid #d63638;
+    color: #4f1d1e;
+}
+.phoenix-toast.phoenix-toast-info {
+    background: #f0f6fc;
+    border-left: 4px solid #2271b1;
+    color: #1d2c3e;
+}
+
+/* ---- Responsive helpers ---- */
+@media (max-width: 782px) {
+    .phoenix-card {
+        padding: 12px;
+    }
+    .phoenix-toast {
+        top: 46px;
+        right: 10px;
+        left: 10px;
+        max-width: none;
+    }
+}
