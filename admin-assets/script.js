@@ -194,3 +194,215 @@
     });
 
 })(jQuery);
+
+/* ========================================================================
+ * Phoenix CRM — Dashboard v2 Widget Scripts (appended v1.1.0)
+ * ====================================================================== */
+
+    /* ---- Widget collapse/expand toggle ---- */
+    $(document).on('click', '.phoenix-widget-toggle', function () {
+        var $widget = $(this).closest('.phoenix-widget');
+        $widget.toggleClass('collapsed');
+        var $icon = $(this);
+        if ($widget.hasClass('collapsed')) {
+            $icon.text('\u25B6');   /* ▶ */
+        } else {
+            $icon.text('\u25BC');   /* ▼ */
+        }
+    });
+
+    /* ---- Widget drag-to-reorder (jQuery UI Sortable) ---- */
+    function phoenixInitSortable() {
+        if (!$.fn.sortable) return;
+        $('.phoenix-dashboard-grid').sortable({
+            handle:       '.phoenix-widget-header',
+            placeholder:  'phoenix-widget-placeholder',
+            forcePlaceholderSize: true,
+            update:       function () {
+                var order = [];
+                $(this).find('.phoenix-widget').each(function () {
+                    var id = $(this).data('widget-id');
+                    if (id) order.push(id);
+                });
+                if (order.length === 0) return;
+                $.post(ajaxurl, {
+                    _ajax_nonce: window.phoenix_crm_admin.nonce,
+                    action:      'phoenix_save_widget_order',
+                    widget_ids:  order
+                }, function (resp) {
+                    if (!resp.success) {
+                        phoenixToast(resp.data || 'Failed to save widget order.', 'error');
+                    }
+                }).fail(function () {
+                    phoenixToast('Server error saving widget order.', 'error');
+                });
+            }
+        });
+    }
+
+    /* ---- Task checkbox toggle ---- */
+    $(document).on('change', '.phoenix-task-checkbox', function () {
+        var $cb    = $(this);
+        var taskId = $cb.data('task-id');
+        var done   = $cb.is(':checked') ? 1 : 0;
+
+        $.post(ajaxurl, {
+            _ajax_nonce: window.phoenix_crm_admin.nonce,
+            action:      'phoenix_task_toggle',
+            task_id:     taskId,
+            done:        done
+        }, function (resp) {
+            if (resp.success) {
+                var $title = $cb.closest('.phoenix-task-item').find('.phoenix-task-title');
+                $title.toggleClass('done', !!done);
+                $cb.prop('checked', !!done);
+            } else {
+                phoenixToast(resp.data || 'Error toggling task.', 'error');
+                $cb.prop('checked', !done);
+            }
+        }).fail(function () {
+            phoenixToast('Server error toggling task.', 'error');
+            $cb.prop('checked', !done);
+        });
+    });
+
+    /* ---- Quick-add task form ---- */
+    $(document).on('submit', '.phoenix-quick-add-task-form', function (e) {
+        e.preventDefault();
+        var $form  = $(this);
+        var $input = $form.find('input[name="task_title"]');
+        var title  = $input.val().trim();
+        if (!title) return;
+
+        var $btn = $form.find('button[type="submit"]');
+        phoenixLoading($btn, true);
+
+        $.post(ajaxurl, {
+            _ajax_nonce: window.phoenix_crm_admin.nonce,
+            action:      'phoenix_add_task',
+            task_title:  title
+        }, function (resp) {
+            if (resp.success) {
+                $input.val('');
+                phoenixToast('Task added.', 'success');
+                location.reload();
+            } else {
+                phoenixToast(resp.data || 'Error adding task.', 'error');
+            }
+        }).fail(function () {
+            phoenixToast('Server error adding task.', 'error');
+        }).always(function () {
+            phoenixLoading($btn, false);
+        });
+    });
+
+    /* ---- Quick-add note form ---- */
+    $(document).on('submit', '.phoenix-quick-add-note-form', function (e) {
+        e.preventDefault();
+        var $form  = $(this);
+        var $input = $form.find('input[name="note_text"]');
+        var text   = $input.val().trim();
+        if (!text) return;
+
+        var $btn = $form.find('button[type="submit"]');
+        phoenixLoading($btn, true);
+
+        $.post(ajaxurl, {
+            _ajax_nonce: window.phoenix_crm_admin.nonce,
+            action:      'phoenix_add_note',
+            note_text:   text
+        }, function (resp) {
+            if (resp.success) {
+                $input.val('');
+                phoenixToast('Note added.', 'success');
+                location.reload();
+            } else {
+                phoenixToast(resp.data || 'Error adding note.', 'error');
+            }
+        }).fail(function () {
+            phoenixToast('Server error adding note.', 'error');
+        }).always(function () {
+            phoenixLoading($btn, false);
+        });
+    });
+
+    /* ---- Task filter tabs ---- */
+    $(document).on('click', '.phoenix-filter-tab', function () {
+        var $tab   = $(this);
+        var filter = $tab.data('filter');
+
+        $tab.closest('.phoenix-filter-tabs').find('.phoenix-filter-tab').removeClass('active');
+        $tab.addClass('active');
+
+        var $list = $tab.closest('.phoenix-widget').find('.phoenix-task-list');
+        if (!$list.length) return;
+
+        $list.find('.phoenix-task-item').each(function () {
+            var $item = $(this);
+            switch (filter) {
+                case 'all':
+                    $item.show();
+                    break;
+                case 'active':
+                    $item.find('.phoenix-task-checkbox').is(':checked')
+                        ? $item.hide()
+                        : $item.show();
+                    break;
+                case 'completed':
+                    $item.find('.phoenix-task-checkbox').is(':checked')
+                        ? $item.show()
+                        : $item.hide();
+                    break;
+                default:
+                    $item.show();
+            }
+        });
+    });
+
+    /* ---- Calendar month navigation ---- */
+    $(document).on('click', '.phoenix-calendar-prev', function () {
+        var $cal  = $(this).closest('.phoenix-widget');
+        var month = parseInt($cal.data('cal-month'), 10);
+        var year  = parseInt($cal.data('cal-year'), 10);
+        month--;
+        if (month < 1) { month = 12; year--; }
+        phoenixLoadCalendar($cal, month, year);
+    });
+    $(document).on('click', '.phoenix-calendar-next', function () {
+        var $cal  = $(this).closest('.phoenix-widget');
+        var month = parseInt($cal.data('cal-month'), 10);
+        var year  = parseInt($cal.data('cal-year'), 10);
+        month++;
+        if (month > 12) { month = 1; year++; }
+        phoenixLoadCalendar($cal, month, year);
+    });
+
+    function phoenixLoadCalendar($widget, month, year) {
+        $.post(ajaxurl, {
+            _ajax_nonce: window.phoenix_crm_admin.nonce,
+            action:      'phoenix_get_calendar',
+            month:       month,
+            year:        year
+        }, function (resp) {
+            if (resp.success && resp.data.html) {
+                $widget.find('.phoenix-widget-body').html(resp.data.html);
+                $widget.data('cal-month', month);
+                $widget.data('cal-year', year);
+            } else {
+                phoenixToast(resp.data || 'Error loading calendar.', 'error');
+            }
+        }).fail(function () {
+            phoenixToast('Server error loading calendar.', 'error');
+        });
+    }
+
+    /* ---- Init sortable on DOM ready ---- */
+    $(document).ready(function () {
+        try {
+            phoenixInitSortable();
+        } catch (e) {
+            // jQuery UI Sortable not available — drag-to-reorder disabled
+        }
+    });
+
+})(jQuery);

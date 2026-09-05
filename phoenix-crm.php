@@ -26,7 +26,7 @@ if (!defined('ABSPATH')) {
 // Constants
 // ---------------------------------------------------------------------------
 
-define('PHOENIX_CRM_VERSION', '1.0.0');
+define('PHOENIX_CRM_VERSION', '1.1.0');
 define('PHOENIX_CRM_PLUGIN_FILE', __FILE__);
 define('PHOENIX_CRM_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('PHOENIX_CRM_PLUGIN_URL', plugin_dir_url(__FILE__));
@@ -159,6 +159,9 @@ function phoenix_crm_loaded() {
 
     // Hook the admin settings key regeneration.
     add_action( 'admin_post_phoenix_crm_admin_regenerate_key', array( 'Phoenix_CRM_Admin_Settings', 'handle_regenerate_key' ) );
+
+    // Initialize Widget Manager (dashboard widgets v1.1.0).
+    Phoenix_CRM_Widgets_Manager::init();
 
     // -----------------------------------------------------------------------
     // Admin-only bootstrap

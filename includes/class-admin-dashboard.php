@@ -2,11 +2,12 @@
 /**
  * Phoenix CRM Admin Dashboard
  *
- * Renders the main dashboard page with summary statistics cards,
- * a recent events activity table, and quick-action buttons.
+ * Renders the main dashboard page with a widget grid (delegated to
+ * Widgets_Manager), an inline Recent Activity table, and quick-action
+ * buttons.
  *
  * @package Phoenix_CRM
- * @since   1.0.0
+ * @since   1.1.0
  */
 
 // Prevent direct access.
@@ -17,8 +18,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Class Phoenix_CRM_Admin_Dashboard
  *
- * Displays the CRM dashboard overview with counts, latest events,
- * and one-click action links.
+ * Displays the CRM dashboard overview with widget-driven summary cards,
+ * latest events table, and one-click action links.
  */
 class Phoenix_CRM_Admin_Dashboard {
 
@@ -32,6 +33,10 @@ class Phoenix_CRM_Admin_Dashboard {
     /**
      * Render the full dashboard page.
      *
+     * Starts output buffering, delegates widget rendering to
+     * Widgets_Manager, then renders the inline Recent Activity
+     * table and quick-action links.
+     *
      * @return void
      */
     public static function render_page() {
@@ -39,8 +44,12 @@ class Phoenix_CRM_Admin_Dashboard {
             wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'phoenix-crm' ) );
         }
 
-        $stats   = self::get_summary_stats();
-        $events  = self::get_recent_events();
+        // Start output buffering so Widgets_Manager output is captured.
+        ob_start();
+
+        // Ensure widgets are registered.
+        Phoenix_CRM_Widgets_Manager::init();
+
         $version = defined( 'PHOENIX_CRM_VERSION' ) ? PHOENIX_CRM_VERSION : '—';
         ?>
         <div class="wrap">
@@ -49,58 +58,13 @@ class Phoenix_CRM_Admin_Dashboard {
 
             <hr />
 
-            <!-- Summary Cards -->
-            <div id="phoenix-crm-dashboard-cards" style="display:flex;flex-wrap:wrap;gap:20px;margin:20px 0;">
-                <?php self::render_card( __( 'Proposals', 'phoenix-crm' ), $stats['proposals'], 'dashicons-edit-page', '#2271b1', admin_url( 'admin.php?page=phoenix-crm-proposals' ) ); ?>
-                <?php self::render_card( __( 'Active Goals', 'phoenix-crm' ), $stats['active_goals'], 'dashicons-awards', '#2c7a3e', admin_url( 'admin.php?page=phoenix-crm-goals' ) ); ?>
-                <?php self::render_card( __( 'Projects', 'phoenix-crm' ), $stats['projects'], 'dashicons-portfolio', '#7b4ca0', admin_url( 'admin.php?page=phoenix-crm-projects' ) ); ?>
-                <?php self::render_card( __( 'Events Recorded', 'phoenix-crm' ), $stats['events'], 'dashicons-clock', '#b2621a', admin_url( 'admin.php?page=phoenix-crm-event-log' ) ); ?>
-            </div>
+            <!-- Dashboard Widget Grid (delegated to Widgets_Manager) -->
+            <?php Phoenix_CRM_Widgets_Manager::render_dashboard(); ?>
 
-            <!-- Recent Events Table -->
-            <div id="phoenix-crm-recent-events" style="margin-top:30px;">
+            <!-- Recent Activity Table -->
+            <div id="phoenix-crm-recent-activity" style="margin-top:30px;">
                 <h2><?php esc_html_e( 'Recent Activity', 'phoenix-crm' ); ?></h2>
-                <?php if ( empty( $events ) ) : ?>
-                    <p><em><?php esc_html_e( 'No events recorded yet. Events will appear here as the CRM processes data.', 'phoenix-crm' ); ?></em></p>
-                <?php else : ?>
-                    <table class="wp-list-table widefat fixed striped" style="margin-top:10px;">
-                        <thead>
-                            <tr>
-                                <th scope="col" style="width:60px;"><?php esc_html_e( 'ID', 'phoenix-crm' ); ?></th>
-                                <th scope="col"><?php esc_html_e( 'Actor', 'phoenix-crm' ); ?></th>
-                                <th scope="col"><?php esc_html_e( 'Action', 'phoenix-crm' ); ?></th>
-                                <th scope="col"><?php esc_html_e( 'Target', 'phoenix-crm' ); ?></th>
-                                <th scope="col"><?php esc_html_e( 'Note', 'phoenix-crm' ); ?></th>
-                                <th scope="col"><?php esc_html_e( 'Date', 'phoenix-crm' ); ?></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ( $events as $event ) : ?>
-                                <tr>
-                                    <td><?php echo esc_html( $event->id ); ?></td>
-                                    <td><?php echo esc_html( $event->actor ); ?></td>
-                                    <td><?php echo esc_html( $event->action ); ?></td>
-                                    <td>
-                                        <?php
-                                        echo esc_html(
-                                            ! empty( $event->target_type )
-                                                ? $event->target_type . ' #' . $event->target_id
-                                                : '—'
-                                        );
-                                        ?>
-                                    </td>
-                                    <td><?php echo esc_html( ! empty( $event->note ) ? substr( $event->note, 0, 80 ) : '—' ); ?></td>
-                                    <td><?php echo esc_html( $event->created_at ); ?></td>
-                                </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                    <p style="margin-top:10px;">
-                        <a href="<?php echo esc_url( admin_url( 'admin.php?page=phoenix-crm-event-log' ) ); ?>" class="button">
-                            <?php esc_html_e( 'View Full Event Log', 'phoenix-crm' ); ?>
-                        </a>
-                    </p>
-                <?php endif; ?>
+                <?php self::render_recent_activity(); ?>
             </div>
 
             <!-- Quick Actions -->
@@ -134,6 +98,65 @@ class Phoenix_CRM_Admin_Dashboard {
                 ?>
             </p>
         </div>
+        <?php
+
+        // Flush the output buffer.
+        ob_end_flush();
+    }
+
+    /**
+     * Render the inline Recent Activity table.
+     *
+     * Displays the latest 10 events from phoenix_events with ID, Actor,
+     * Action, Target, truncated Note (60 chars), and Date columns.
+     *
+     * @return void
+     */
+    private static function render_recent_activity() {
+        $events = self::get_recent_events();
+
+        if ( empty( $events ) ) {
+            echo '<p><em>' . esc_html__( 'No events recorded yet. Events will appear here as the CRM processes data.', 'phoenix-crm' ) . '</em></p>';
+            return;
+        }
+        ?>
+        <table class="wp-list-table widefat fixed striped" style="margin-top:10px;">
+            <thead>
+                <tr>
+                    <th scope="col" style="width:60px;"><?php esc_html_e( 'ID', 'phoenix-crm' ); ?></th>
+                    <th scope="col"><?php esc_html_e( 'Actor', 'phoenix-crm' ); ?></th>
+                    <th scope="col"><?php esc_html_e( 'Action', 'phoenix-crm' ); ?></th>
+                    <th scope="col"><?php esc_html_e( 'Target', 'phoenix-crm' ); ?></th>
+                    <th scope="col"><?php esc_html_e( 'Note', 'phoenix-crm' ); ?></th>
+                    <th scope="col"><?php esc_html_e( 'Date', 'phoenix-crm' ); ?></th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ( $events as $event ) : ?>
+                    <tr>
+                        <td><?php echo esc_html( $event->id ); ?></td>
+                        <td><?php echo esc_html( $event->actor ); ?></td>
+                        <td><?php echo esc_html( $event->action ); ?></td>
+                        <td>
+                            <?php
+                            echo esc_html(
+                                ! empty( $event->target_type )
+                                    ? $event->target_type . ' #' . $event->target_id
+                                    : '—'
+                            );
+                            ?>
+                        </td>
+                        <td><?php echo esc_html( ! empty( $event->note ) ? mb_substr( $event->note, 0, 60 ) : '—' ); ?></td>
+                        <td><?php echo esc_html( $event->created_at ); ?></td>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+        <p style="margin-top:10px;">
+            <a href="<?php echo esc_url( admin_url( 'admin.php?page=phoenix-crm-event-log' ) ); ?>" class="button">
+                <?php esc_html_e( 'View Full Event Log', 'phoenix-crm' ); ?>
+            </a>
+        </p>
         <?php
     }
 
@@ -182,46 +205,54 @@ class Phoenix_CRM_Admin_Dashboard {
 
         $tables = Phoenix_CRM_Database::get_table_names();
 
-        // Proposals total.
-        if ( self::table_exists( $tables[2] ) ) { // phoenix_proposals.
+        // Proposals total (index 2).
+        if ( isset( $tables[2] ) && self::table_exists( $tables[2] ) ) {
             // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
             $count = $wpdb->get_var(
-                "SELECT COUNT(*) FROM {$tables[2]}"
+                $wpdb->prepare(
+                    "SELECT COUNT(*) FROM {$tables[2]}"
+                )
             );
-            if ( ! is_null( $count ) ) {
+            if ( is_numeric( $count ) ) {
                 $defaults['proposals'] = (int) $count;
             }
         }
 
-        // Active goals (status = 'active').
-        if ( self::table_exists( $tables[3] ) ) { // phoenix_goals.
+        // Active goals (index 3, status = 'active').
+        if ( isset( $tables[3] ) && self::table_exists( $tables[3] ) ) {
             // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
             $count = $wpdb->get_var(
-                "SELECT COUNT(*) FROM {$tables[3]} WHERE status = 'active'"
+                $wpdb->prepare(
+                    "SELECT COUNT(*) FROM {$tables[3]} WHERE status = 'active'"
+                )
             );
-            if ( ! is_null( $count ) ) {
+            if ( is_numeric( $count ) ) {
                 $defaults['active_goals'] = (int) $count;
             }
         }
 
-        // Projects total.
-        if ( self::table_exists( $tables[4] ) ) { // phoenix_projects.
+        // Projects total (index 4).
+        if ( isset( $tables[4] ) && self::table_exists( $tables[4] ) ) {
             // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
             $count = $wpdb->get_var(
-                "SELECT COUNT(*) FROM {$tables[4]}"
+                $wpdb->prepare(
+                    "SELECT COUNT(*) FROM {$tables[4]}"
+                )
             );
-            if ( ! is_null( $count ) ) {
+            if ( is_numeric( $count ) ) {
                 $defaults['projects'] = (int) $count;
             }
         }
 
-        // Events total.
-        if ( self::table_exists( $tables[1] ) ) { // phoenix_events.
+        // Events total (index 1).
+        if ( isset( $tables[1] ) && self::table_exists( $tables[1] ) ) {
             // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
             $count = $wpdb->get_var(
-                "SELECT COUNT(*) FROM {$tables[1]}"
+                $wpdb->prepare(
+                    "SELECT COUNT(*) FROM {$tables[1]}"
+                )
             );
-            if ( ! is_null( $count ) ) {
+            if ( is_numeric( $count ) ) {
                 $defaults['events'] = (int) $count;
             }
         }
@@ -239,12 +270,12 @@ class Phoenix_CRM_Admin_Dashboard {
 
         $tables = Phoenix_CRM_Database::get_table_names();
 
-        if ( ! self::table_exists( $tables[1] ) ) { // phoenix_events.
+        if ( ! isset( $tables[1] ) || ! self::table_exists( $tables[1] ) ) {
             return array();
         }
 
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
         $results = $wpdb->get_results(
-            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
             $wpdb->prepare(
                 "SELECT id, actor, action, target_type, target_id, note, created_at
                  FROM {$tables[1]}

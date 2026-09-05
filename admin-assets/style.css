@@ -127,3 +127,230 @@
         max-width: none;
     }
 }
+
+/* ========================================================================
+ * Phoenix CRM — Dashboard v2 Widget Styles (appended v1.1.0)
+ * ====================================================================== */
+
+/* ---- Dashboard Widget Grid ---- */
+.phoenix-dashboard-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin: 20px 0;
+}
+@media (max-width: 1200px) {
+    .phoenix-dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ---- Widget container ---- */
+.phoenix-widget {
+    background: #fff;
+    border: 1px solid #ccd0d4;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+.phoenix-widget-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid #ccd0d4;
+    cursor: move;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.phoenix-widget-header h3 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+}
+.phoenix-widget-toggle {
+    cursor: pointer;
+    color: #72777c;
+    font-size: 18px;
+    line-height: 1;
+}
+.phoenix-widget-body {
+    padding: 16px;
+}
+.phoenix-widget.collapsed .phoenix-widget-body {
+    display: none;
+}
+
+/* ---- Progress Bars ---- */
+.phoenix-progress-bar {
+    background: #f0f0f1;
+    border-radius: 3px;
+    height: 20px;
+    margin: 8px 0;
+    overflow: hidden;
+}
+.phoenix-progress-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.3s ease;
+}
+.phoenix-progress-fill.green {
+    background: #4caf50;
+}
+.phoenix-progress-fill.orange {
+    background: #ff9800;
+}
+.phoenix-progress-fill.red {
+    background: #f44336;
+}
+
+/* ---- Priority Badges ---- */
+.phoenix-priority-low {
+    color: #2196f3;
+    background: #e3f2fd;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 11px;
+}
+.phoenix-priority-medium {
+    color: #ff9800;
+    background: #fff3e0;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 11px;
+}
+.phoenix-priority-high {
+    color: #f44336;
+    background: #ffebee;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 11px;
+}
+.phoenix-priority-critical {
+    color: #9c27b0;
+    background: #f3e5f5;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 11px;
+}
+
+/* ---- Task List ---- */
+.phoenix-task-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.phoenix-task-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 0;
+    border-bottom: 1px solid #f0f0f1;
+}
+.phoenix-task-item:last-child {
+    border-bottom: none;
+}
+.phoenix-task-checkbox {
+    margin: 0;
+}
+.phoenix-task-title {
+    flex: 1;
+    font-size: 13px;
+}
+.phoenix-task-title.done {
+    text-decoration: line-through;
+    color: #999;
+}
+.phoenix-task-meta {
+    font-size: 11px;
+    color: #72777c;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+/* ---- Quick Add ---- */
+.phoenix-quick-add {
+    margin-top: 12px;
+    display: flex;
+    gap: 8px;
+}
+.phoenix-quick-add input {
+    flex: 1;
+}
+
+/* ---- Calendar ---- */
+.phoenix-calendar-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.phoenix-calendar-table th {
+    text-align: center;
+    padding: 4px;
+    font-size: 11px;
+    color: #72777c;
+}
+.phoenix-calendar-table td {
+    text-align: center;
+    padding: 6px 4px;
+    font-size: 12px;
+    cursor: default;
+}
+.phoenix-calendar-today {
+    background: #e3f2fd;
+    border-radius: 50%;
+    font-weight: 600;
+}
+.phoenix-calendar-has-deadline {
+    color: #f44336;
+    font-weight: 600;
+    position: relative;
+}
+.phoenix-calendar-has-deadline::after {
+    content: '';
+    position: absolute;
+    bottom: 2px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 4px;
+    height: 4px;
+    background: #f44336;
+    border-radius: 50%;
+}
+
+/* ---- Agent Tasks Cards ---- */
+.phoenix-agent-task-card {
+    padding: 10px;
+    margin-bottom: 8px;
+    border: 1px solid #f0f0f1;
+    border-radius: 4px;
+}
+.phoenix-agent-task-card:hover {
+    background: #f8f9fa;
+}
+
+/* ---- Widget Footer Links ---- */
+.phoenix-widget-footer {
+    margin-top: 12px;
+    padding-top: 8px;
+    border-top: 1px solid #f0f0f1;
+    text-align: right;
+    font-size: 12px;
+}
+
+/* ---- Filter Tabs ---- */
+.phoenix-filter-tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 12px;
+}
+.phoenix-filter-tab {
+    padding: 4px 12px;
+    border: 1px solid #ccd0d4;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 12px;
+    background: #fff;
+}
+.phoenix-filter-tab.active {
+    background: #2271b1;
+    color: #fff;
+    border-color: #2271b1;
+}

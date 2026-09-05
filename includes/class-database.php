@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
 /**
  * Class Phoenix_CRM_Database
  *
- * Responsible for installing, upgrading, and dropping the eight custom tables
+ * Responsible for installing, upgrading, and dropping the nine custom tables
  * that underpin the Phoenix Agentic CRM.
  */
 class Phoenix_CRM_Database {
@@ -85,6 +85,7 @@ class Phoenix_CRM_Database {
             "{$prefix}phoenix_saved_items",
             "{$prefix}phoenix_notes",
             "{$prefix}phoenix_report_templates",
+            "{$prefix}phoenix_user_tasks",
         ];
     }
 
@@ -249,6 +250,27 @@ class Phoenix_CRM_Database {
             created_at DATETIME NOT NULL DEFAULT '0000-00-00 00:00:00',
             PRIMARY KEY (id),
             KEY idx_templates_name (name)
+        ) {$charset_collate};";
+
+        // -------------------------------------------------------------------
+        // 9. phoenix_user_tasks
+        //    Personal task list for dashboard users, with priority and due date.
+        // -------------------------------------------------------------------
+        $tables[] = "CREATE TABLE {$prefix}phoenix_user_tasks (
+            id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+            user_id BIGINT(20) UNSIGNED NOT NULL DEFAULT 0,
+            title VARCHAR(255) NOT NULL DEFAULT '',
+            description TEXT,
+            priority VARCHAR(10) NOT NULL DEFAULT 'medium',
+            status VARCHAR(20) NOT NULL DEFAULT 'pending',
+            due_date DATE NULL DEFAULT NULL,
+            created_at DATETIME NOT NULL DEFAULT '0000-00-00 00:00:00',
+            completed_at DATETIME NULL DEFAULT NULL,
+            PRIMARY KEY (id),
+            KEY idx_user_tasks_user (user_id),
+            KEY idx_user_tasks_status (status),
+            KEY idx_user_tasks_due (due_date),
+            KEY idx_user_tasks_priority (priority)
         ) {$charset_collate};";
 
         return implode("\n", $tables) . "\n";
